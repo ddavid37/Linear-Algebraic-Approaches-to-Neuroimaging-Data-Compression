@@ -1,7 +1,9 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pydicom
+from skimage.metrics import mean_squared_error, peak_signal_noise_ratio
 
 plt.rcParams['figure.figsize'] = [16, 8]
 
@@ -11,80 +13,54 @@ A = dicom_file.pixel_array
 
 # Convert to grayscale if necessary
 if len(A.shape) == 3:
-	X = np.mean(A, -1)
+    X = np.mean(A, -1)
 else:
-	X = A
+    X = A
 
 img = plt.imshow(X)
 img.set_cmap('gray')
-plt.axis('off')         
+plt.axis('off')
 plt.show()
 
-U, S, VT = np.linalg.svd(X,full_matrices=False)
+U, S, VT = np.linalg.svd(X, full_matrices=False)
 S = np.diag(S)
 
-j = 0
-for r in (5, 10, 20, 30, 40, 50, 75, 100):
-    # Construct approximate image
-    Xapprox = U[:,:r] @ S[0:r,:r] @ VT[:r,:]
-    plt.figure(j+1)
-    j += 1
-    img = plt.imshow(Xapprox)
-    img.set_cmap('gray')
-    plt.axis('off')
-    plt.title('r = ' + str(r))
-    plt.show()
-	
-
-import os
-
-# Save the images with different r values
-for r in (5, 10, 20, 30, 40, 50, 75, 100):
-    Xapprox = U[:, :r] @ S[0:r, :r] @ VT[:r, :]
-    plt.figure()
-    img = plt.imshow(Xapprox)
-    img.set_cmap('gray')
-    plt.axis('off')
-    plt.title('r = ' + str(r))
-    filename = f'approx_image_r_{r}.png'
-    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
-    plt.close()
-    print(f'Size of {filename}: {os.path.getsize(filename)} bytes')
-
-from skimage.metrics import mean_squared_error, peak_signal_noise_ratio
-
-for r in (5, 10, 20, 30, 40, 50, 75, 100):
-    Xapprox = U[:, :r] @ S[0:r, :r] @ VT[:r, :]
-    mse = mean_squared_error(X, Xapprox)
-    psnr = peak_signal_noise_ratio(X, Xapprox, data_range=X.max() - X.min())
-    print(f'For r = {r}, MSE: {mse}, PSNR: {psnr} dB')
-
-print('\nMSE values range from 0–∞, with lower being better.')
-print('PSNR values range from 20–50 dB, with higher being better.')
-
-
-import numpy as np
-from skimage.metrics import mean_squared_error, peak_signal_noise_ratio
-
-# Define the r_values
 r_values = [5, 10, 20, 30, 40, 50, 75, 100]
 
-# Initialize lists to store MSE, PSNR, and memory size
+# Save the images with different r values and calculate MSE, PSNR, and memory size
 mse_values = []
 psnr_values = []
 memory_sizes = []
 
-# Calculate MSE, PSNR, and memory size for each r
 for r in r_values:
     Xapprox = U[:, :r] @ S[0:r, :r] @ VT[:r, :]
+    
+    # Save the image
+    plt.figure()
+    img = plt.imshow(Xapprox)
+    img.set_cmap('gray')
+    plt.axis('off')
+    plt.title(f'r = {r}')
+    filename = f'approx_image_r_{r}.png'
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
+    
+    # Calculate MSE and PSNR
     mse = mean_squared_error(X, Xapprox)
     psnr = peak_signal_noise_ratio(X, Xapprox, data_range=X.max() - X.min())
-    filename = f'approx_image_r_{r}.png'
+    
+    # Get memory size
     memory_size = os.path.getsize(filename)
     
     mse_values.append(mse)
     psnr_values.append(psnr)
     memory_sizes.append(memory_size)
+    
+    print(f'Size of {filename}: {memory_size} bytes')
+    print(f'For r = {r}, MSE: {mse}, PSNR: {psnr} dB')
+
+print('\nMSE values range from 0–∞, with lower being better.')
+print('PSNR values range from 20–50 dB, with higher being better.')
 
 # Plot the results
 plt.figure(figsize=(12, 6))
