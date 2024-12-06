@@ -61,3 +61,51 @@ for r in (5, 10, 20, 30, 40, 50, 75, 100):
 
 print('\nMSE values range from 0–∞, with lower being better.')
 print('PSNR values range from 20–50 dB, with higher being better.')
+
+
+import numpy as np
+from skimage.metrics import mean_squared_error, peak_signal_noise_ratio
+
+# Define the r_values
+r_values = [5, 10, 20, 30, 40, 50, 75, 100]
+
+# Initialize lists to store MSE, PSNR, and memory size
+mse_values = []
+psnr_values = []
+memory_sizes = []
+
+# Calculate MSE, PSNR, and memory size for each r
+for r in r_values:
+    Xapprox = U[:, :r] @ S[0:r, :r] @ VT[:r, :]
+    mse = mean_squared_error(X, Xapprox)
+    psnr = peak_signal_noise_ratio(X, Xapprox, data_range=X.max() - X.min())
+    filename = f'approx_image_r_{r}.png'
+    memory_size = os.path.getsize(filename)
+    
+    mse_values.append(mse)
+    psnr_values.append(psnr)
+    memory_sizes.append(memory_size)
+
+# Plot the results
+plt.figure(figsize=(12, 6))
+
+plt.subplot(1, 3, 1)
+plt.plot(r_values, mse_values, marker='o')
+plt.xlabel('r')
+plt.ylabel('MSE')
+plt.title('MSE vs r')
+
+plt.subplot(1, 3, 2)
+plt.plot(r_values, psnr_values, marker='o')
+plt.xlabel('r')
+plt.ylabel('PSNR (dB)')
+plt.title('PSNR vs r')
+
+plt.subplot(1, 3, 3)
+plt.plot(r_values, memory_sizes, marker='o')
+plt.xlabel('r')
+plt.ylabel('Memory Size (bytes)')
+plt.title('Memory Size vs r')
+
+plt.tight_layout()
+plt.show()
