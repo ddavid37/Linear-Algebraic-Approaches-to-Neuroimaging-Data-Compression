@@ -34,3 +34,19 @@ for r in (5, 10, 20, 30, 40, 50, 75, 100):
     plt.axis('off')
     plt.title('r = ' + str(r))
     plt.show()
+	
+
+import os
+
+# Save the images with different r values
+for r in (5, 10, 20, 30, 40, 50, 75, 100):
+    Xapprox = U[:, :r] @ S[0:r, :r] @ VT[:r, :]
+    plt.figure()
+    img = plt.imshow(Xapprox)
+    img.set_cmap('gray')
+    plt.axis('off')
+    plt.title('r = ' + str(r))
+    filename = f'approx_image_r_{r}.png'
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+    plt.close()
+    print(f'Size of {filename}: {os.path.getsize(filename)} bytes')
